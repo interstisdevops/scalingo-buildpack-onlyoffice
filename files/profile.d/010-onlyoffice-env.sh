@@ -3,14 +3,14 @@
 export OO_DS_RABBITMQ_URL="${OO_DS_RABBITMQ_URL:-""}"
 
 # Detect if TLS is used (rediss://)
-if [[ "$SCALINGO_REDIS_URL" == rediss://* ]]; then
+if [[ "$REDIS_URL" == rediss://* ]]; then
   REDIS_TLS="{"rejectUnauthorized": false}"
 else
   REDIS_TLS=""
 fi
 
 # Remove the protocol prefix (redis:// or rediss://)
-REDIS_URL_CLEAN="${SCALINGO_REDIS_URL#redis://}"
+REDIS_URL_CLEAN="${REDIS_URL#redis://}"
 REDIS_URL_CLEAN="${REDIS_URL_CLEAN#rediss://}"
 
 # Split credentials (user:password) and host:port
@@ -43,19 +43,19 @@ export OO_DS_SERVICES_COAUTHORING_REDIS_TLS
 
 OO_DS_SERVICES_COAUTHORING_SQL_TYPE="postgresql"
 
-POSTGRESQL_HOST="$( echo "${SCALINGO_POSTGRESQL_URL}" \
+POSTGRESQL_HOST="$( echo "${POSTGRES_URL}" \
 	| cut -d "@" -f2 | cut -d ":" -f1 )"
 
-POSTGRESQL_USER="$( echo "${SCALINGO_POSTGRESQL_URL}" \
+POSTGRESQL_USER="$( echo "${POSTGRES_URL}" \
 	| cut -d "/" -f3 | cut -d ":" -f1 )"
 
-POSTGRESQL_PORT="$( echo "${SCALINGO_POSTGRESQL_URL}" \
+POSTGRESQL_PORT="$( echo "${POSTGRES_URL}" \
 	| cut -d ":" -f4 | cut -d "/" -f1 )"
 
-POSTGRESQL_PASS="$( echo "${SCALINGO_POSTGRESQL_URL}" \
+POSTGRESQL_PASS="$( echo "${POSTGRES_URL}" \
 	| cut -d "@" -f1 | cut -d ":" -f3 )"
 
-POSTGRESQL_DBNAME="$( echo "${SCALINGO_POSTGRESQL_URL}" \
+POSTGRESQL_DBNAME="$( echo "${POSTGRES_URL}" \
 	| cut -d "?" -f1 | cut -d "/" -f4 )"
 
 OO_DS_SERVICES_COAUTHORING_SQL_DBHOST="${OO_DS_SERVICES_COAUTHORING_SQL_DBHOST:-"${POSTGRESQL_HOST:-""}"}"
@@ -98,3 +98,7 @@ export OO_S3_STORAGE_FOLDER_NAME
 export OO_S3_USE_PATH_STYLE
 export OO_S3_ACCESS_KEY_ID
 export OO_S3_SECRET_ACCESS_KEY
+
+if [ -n "${OO_DS_LICENCE:-}" ]; then
+	echo "${OO_DS_LICENCE}" | base64 --decode > /app/license.lic
+fi

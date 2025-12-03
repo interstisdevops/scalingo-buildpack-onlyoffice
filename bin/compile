@@ -18,10 +18,10 @@ source "${buildpack_dir}/versions.sh"
 version="${ONLYOFFICE_DOCUMENTSERVER_VERSION:-"${ONLYOFFICE_DOCUMENTSERVER_DEFAULT_VERSION}"}"
 
 # GitHub API URL to retrieve the release corresponding to the version:
-release_url="https://api.github.com/repos/onlyoffice/DocumentServer/releases/tags/v${version}"
+release_url="https://download.onlyoffice.com/repo/debian/pool/main/o/onlyoffice-documentserver-ee/onlyoffice-documentserver-ee_${version}_amd64.deb"
 
 # Path to the .deb file stored in cache (it may or may not exist):
-archive="${cache_dir}/onlyoffice-documentserver-${version}.deb"
+archive="${cache_dir}/onlyoffice-documentserver-ee_${version}.deb"
 
 # Path to the checksum for the .deb file:
 checksum_file="${archive}.sha256"
@@ -66,13 +66,6 @@ cmn::step::finish
 
 cmn::step::start "Installing OnlyOffice DocumentServer ${version}"
 
-#download_url="$( jq --raw-output --null-input \
-#					--argjson data "${tag_info}" '$data.browser_download_url' )"
-
-#digest="$( jq --raw-output --null-input \
-#				--argjson data "${tag_info}" '$data.digest' \
-#					| cut -d':' -f2 )"
-
 if [ ! -f "${archive}" ]; then
 
 	# Remove .deb and .deb.sha256 files from cache, since they are probably for
@@ -82,11 +75,9 @@ if [ ! -f "${archive}" ]; then
 	rm --recursive --force "${cache_dir}"/*.sha256
 	cmn::task::finish
 
-	download_url="https://download.onlyoffice.com/repo/debian/pool/main/o/onlyoffice-documentserver-ee/onlyoffice-documentserver-ee_9.1.0_amd64.deb"
-
 	# Download appropriate version:
 	cmn::task::start "Downloading archive"
-	if ! cmn::file::download "${download_url}" "${archive}"; then
+	if ! cmn::file::download "${release_url}" "${archive}"; then
 		cmn::task::fail "Unable to download archive file, aborting."
 		cmn::step::fail
 		exit 10
@@ -95,20 +86,6 @@ if [ ! -f "${archive}" ]; then
 else
 	cmn::output::info "Found file in cache."
 fi
-
-# cmn::task::start "Checking archive validity"
-# echo "${digest}" > "${checksum_file}"
-
-# if ! cmn::file::check_checksum "${archive}" "${checksum_file}"; then
-# 	cmn::task::fail
-# 	cmn::output::err <<- EOM
-# 		Checksums do not match!
-# 		'${archive}' has been deleted, since it's most likely corrupt.
-# 		Please trigger another deployment to retry.
-# 	EOM
-# 	exit 11
-# fi
-# cmn::task::finish
 
 cmn::task::start "Extracting"
 if ! dpkg-deb --extract "${archive}" "${onlyoffice_dir}" 2>/dev/null; then
@@ -134,7 +111,6 @@ cmn::task::finish
 
 cmn::task::start "Configuring"
 
-#if ! cp "${onlyoffice_dir}/etc/onlyoffice/documentserver/log4js/production.json" \
 if ! cp "${onlyoffice_dir}/etc/onlyoffice/documentserver/log4js/development.json" \
 		"${config_dir}/log4js/production.json" \
 		2>/dev/null

@@ -18,7 +18,7 @@ case "$ONLYOFFICE_MODE" in
     cat << EOF
 ---
 default_process_types:
-  web: /app/server/DocService/docservice & bin/run
+  docservice: /app/server/DocService/docservice & bin/run
 EOF
     ;;
   
@@ -26,21 +26,18 @@ EOF
     cat << EOF
 ---
 default_process_types:
-  web: /app/server/FileConverter/converter & bin/run
-EOF
-    ;;
-  
-  proxy)
-    cat << EOF
----
-default_process_types:
-  web: /app/server/Proxy/proxy & bin/run
+  fileconverter: /app/server/FileConverter/converter & bin/run
 EOF
     ;;
   
   *)
     echo "[ERROR] Unknown value for ONLYOFFICE_MODE: '$ONLYOFFICE_MODE'"
-    echo "Valid values: docservice | fileconverter | proxy"
+    echo "Valid values: docservice | fileconverter"
     exit 1
     ;;
 esac
+
+cat << EOF
+---
+postdeploy: psql "${SCALINGO_POSTGRESQL_URL}" < /app/server/schema/postgresql/createdb.sql
+EOF
