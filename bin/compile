@@ -1,0 +1,274 @@
+#!/usr/bin/env bash
+
+export DEBUG="yes"
+
+# shellcheck disable=SC1091
+source "$( cd -P "$( dirname "${0}" )" && pwd )/../cmnlib.sh"
+source "$( cd -P "$( dirname "${0}" )" && pwd )/../lib/apt"
+
+cmn::main::start "${0}" "${1}" "${2}" "${3}"
+
+# -----------------------------------------------------------------------------
+
+# shellcheck disable=SC1091
+source "${buildpack_dir}/versions.sh"
+
+# Read version from environment,
+# Falls back to the default provided in the buildpack:
+version="${ONLYOFFICE_DOCUMENTSERVER_VERSION:-"${ONLYOFFICE_DOCUMENTSERVER_DEFAULT_VERSION}"}"
+
+# GitHub API URL to retrieve the release corresponding to the version:
+release_url="https://api.github.com/repos/onlyoffice/DocumentServer/releases/tags/v${version}"
+
+# Path to the .deb file stored in cache (it may or may not exist):
+archive="${cache_dir}/onlyoffice-documentserver-${version}.deb"
+
+# Path to the checksum for the .deb file:
+checksum_file="${archive}.sha256"
+
+# Temporary dir, where the .deb is extracted:
+onlyoffice_dir="${tmp_dir}/onlyoffice-${version}"
+
+# Source directory, containing the files we're interested in:
+src="${onlyoffice_dir}/var/www/onlyoffice/documentserver"
+
+#TODO: provide our own default file in files?
+default_config_file="${onlyoffice_dir}/etc/onlyoffice/documentserver/default.json"
+custom_config_file="${build_dir}/production.json"
+
+# Path to the configuration directory:
+config_dir="${build_dir}/config"
+
+# shellcheck disable=SC1091
+source "${buildpack_dir}/versions.sh"
+
+# -----------------------------------------------------------------------------
+
+cmn::step::start "Installing prerequisites"
+
+mkdir --parents "${onlyoffice_dir}"
+mkdir --parents "${config_dir}/log4js"
+mkdir --parents "${build_dir}/.profile.d"
+
+# storage.fs.folderPath:
+mkdir --parents "${build_dir}/cache"
+
+# license.license_file:
+mkdir --parents "${build_dir}/data"
+
+# services.coAuthoring.utils.utils_common_fontdir:
+# FileConverer.converter.fontDir:
+mkdir --parents "${build_dir}/fonts"
+
+cmn::step::finish
+
+# -----------------------------------------------------------------------------
+
+cmn::step::start "Installing OnlyOffice DocumentServer ${version}"
+
+#download_url="$( jq --raw-output --null-input \
+#					--argjson data "${tag_info}" '$data.browser_download_url' )"
+
+#digest="$( jq --raw-output --null-input \
+#				--argjson data "${tag_info}" '$data.digest' \
+#					| cut -d':' -f2 )"
+
+if [ ! -f "${archive}" ]; then
+
+	# Remove .deb and .deb.sha256 files from cache, since they are probably for
+	# another version:
+	cmn::task::start "Cleaning cache"
+	rm --recursive --force "${cache_dir}"/*.deb
+	rm --recursive --force "${cache_dir}"/*.sha256
+	cmn::task::finish
+
+	download_url="https://download.onlyoffice.com/repo/debian/pool/main/o/onlyoffice-documentserver-ee/onlyoffice-documentserver-ee_9.1.0_amd64.deb"
+
+	# Download appropriate version:
+	cmn::task::start "Downloading archive"
+	if ! cmn::file::download "${download_url}" "${archive}"; then
+		cmn::task::fail "Unable to download archive file, aborting."
+		cmn::step::fail
+		exit 10
+	fi
+	cmn::task::finish
+else
+	cmn::output::info "Found file in cache."
+fi
+
+# cmn::task::start "Checking archive validity"
+# echo "${digest}" > "${checksum_file}"
+
+# if ! cmn::file::check_checksum "${archive}" "${checksum_file}"; then
+# 	cmn::task::fail
+# 	cmn::output::err <<- EOM
+# 		Checksums do not match!
+# 		'${archive}' has been deleted, since it's most likely corrupt.
+# 		Please trigger another deployment to retry.
+# 	EOM
+# 	exit 11
+# fi
+# cmn::task::finish
+
+cmn::task::start "Extracting"
+if ! dpkg-deb --extract "${archive}" "${onlyoffice_dir}" 2>/dev/null; then
+	cmn::task::fail "Unable to unpack the archive, aborting."
+	cmn::step::fail
+	exit 12
+fi
+cmn::task::finish
+
+cmn::task::start "Installing"
+if ! cp --archive "${src}"/* "${build_dir}" 2>/dev/null; then
+	cmn::task::fail "Unable to copy required files, aborting."
+	cmn::step::fail
+	exit 13
+fi
+
+if ! cp "${default_config_file}" "${build_dir}/config/" 2>/dev/null; then
+	cmn::task::fail "Unable to copy default configuration file, aborting."
+	cmn::step::fail
+	exit 14
+fi
+cmn::task::finish
+
+cmn::task::start "Configuring"
+
+#if ! cp "${onlyoffice_dir}/etc/onlyoffice/documentserver/log4js/production.json" \
+if ! cp "${onlyoffice_dir}/etc/onlyoffice/documentserver/log4js/development.json" \
+		"${config_dir}/log4js/production.json" \
+		2>/dev/null
+then
+	cmn::task::fail "Unable to copy log4js configuration file, aborting."
+	cmn::step::fail
+	exit 15
+fi
+
+if ! cp "${buildpack_dir}/files/production.json.erb" "${config_dir}/" \
+		2>/dev/null
+then
+	cmn::task::fail "Unable to copy custom configuration template, aborting."
+	cmn::step::fail
+	exit 16
+fi
+cmn::task::finish
+
+cmn::step::finish
+
+# -----------------------------------------------------------------------------
+
+cmn::step::start "Generating Files"
+
+LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${build_dir}/server/FileConverter/bin"
+export LD_LIBRARY_PATH
+
+cmn::task::start "Generating Fonts"
+
+if ! "${build_dir}/server/tools/allfontsgen" \
+		--input="core-fonts" \
+		--allfonts-web="sdkjs/common/AllFonts.js" \
+		--allfonts="server/FileConverter/bin/AllFonts.js" \
+		--images="sdkjs/common/Images" \
+		--selection="server/FileConverter/bin/font_selection.bin" \
+		--output-web="fonts" \
+		--use-system="true"
+then
+	cmn::task::fail
+	cmn::step::fail
+	exit 20
+fi
+
+cmn::task::finish
+
+cmn::task::start "Generating Themes"
+
+if ! "${build_dir}/server/tools/allthemesgen" \
+		--src="sdkjs/slide/themes"\
+		--converter-dir="server/FileConverter/bin"\
+		--output="sdkjs/common/Images"
+then
+	cmn::task::fail
+	cmn::step::fail
+	exit 21
+fi
+
+cmn::task::finish
+
+
+cmn::task::start "Updating Fonts Paths"
+
+# Font paths are generated during build, so that all paths are prefixed with
+# `/build/<UUID>`.
+# At runtime, this path doesn't exist and must be replaced with `/app`:
+
+font_files=(
+	${HOME}/server/FileConverter/bin/AllFonts.js
+	${HOME}/server/FileConverter/bin/font_selection.bin
+	${HOME}/sdkjs/common/AllFonts.js
+)
+
+for f in "${font_files[@]}"; do
+	sed -i -E 's/\/build\/[a-z0-9-]{36}/\/app/g' "${f}"
+done
+
+cmn::task::finish
+
+cmn::step::finish
+
+# -----------------------------------------------------------------------------
+
+cmn::step::start "Copying Files"
+
+if [ -f "${build_dir}/license.lic" ]; then
+	cmn::task::start "Copying License File"
+
+	if ! mv "${build_dir}/license.lic" "${build_dir}/data/license.lic" \
+		2>/dev/null
+	then
+		cmn::task::fail
+		cmn::step::fail
+		exit 31
+	fi
+
+	cmn::task::finish
+fi
+
+cmn::step::finish
+
+# -----------------------------------------------------------------------------
+
+cmn::step::start "Building Environment"
+
+cmn::task::start "Copying profile.d scripts"
+
+mkdir --parents "${build_dir}/.profile.d"
+
+if ! cp "${buildpack_dir}/files/profile.d"/*.sh \
+	"${build_dir}/.profile.d/" 2>/dev/null
+then
+	cmn::task::fail
+	cmn::step::fail
+	exit 40
+fi
+
+cmn::task::finish
+
+cmn::step::finish
+
+# -----------------------------------------------------------------------------
+
+cmn::step::start "Cleaning up"
+
+cmn::task::start "Removing cache files"
+rm --recursive --force "${cache_dir}"/*.deb
+rm --recursive --force "${cache_dir}"/*.sha256
+
+cmn::task::start "Removing temporary files"
+rm --recursive --force "${tmp_dir}"
+cmn::task::finish
+
+cmn::step::finish
+
+# -----------------------------------------------------------------------------
+
+cmn::main::finish
