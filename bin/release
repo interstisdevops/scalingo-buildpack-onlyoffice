@@ -19,6 +19,7 @@ case "$ONLYOFFICE_MODE" in
 ---
 default_process_types:
   docservice: /app/server/DocService/docservice & bin/run
+  postdeploy: psql "${SCALINGO_POSTGRESQL_URL}" < /app/server/schema/postgresql/createdb.sql
 EOF
     ;;
   
@@ -27,6 +28,7 @@ EOF
 ---
 default_process_types:
   fileconverter: /app/server/FileConverter/converter & bin/run
+  postdeploy: psql "${SCALINGO_POSTGRESQL_URL}" < /app/server/schema/postgresql/createdb.sql
 EOF
     ;;
   
@@ -36,8 +38,3 @@ EOF
     exit 1
     ;;
 esac
-
-cat << EOF
----
-postdeploy: psql "${SCALINGO_POSTGRESQL_URL}" < /app/server/schema/postgresql/createdb.sql
-EOF
