@@ -4,7 +4,6 @@ export DEBUG="yes"
 
 # shellcheck disable=SC1091
 source "$( cd -P "$( dirname "${0}" )" && pwd )/../cmnlib.sh"
-source "$( cd -P "$( dirname "${0}" )" && pwd )/../lib/apt"
 
 cmn::main::start "${0}" "${1}" "${2}" "${3}"
 
@@ -107,6 +106,8 @@ if ! cp "${default_config_file}" "${build_dir}/config/" 2>/dev/null; then
 	cmn::step::fail
 	exit 14
 fi
+
+
 cmn::task::finish
 
 cmn::task::start "Configuring"
@@ -127,6 +128,27 @@ then
 	cmn::step::fail
 	exit 16
 fi
+
+mkdir --parents "${build_dir}/bin"
+
+if ! cp "${buildpack_dir}/files/start" "${build_dir}/bin/start" \
+		2>/dev/null
+then
+	cmn::task::fail "Unable to copy start script."
+	cmn::step::fail
+	exit 16
+fi
+
+if ! cp "${buildpack_dir}/files/postdeploy" "${build_dir}/bin/postdeploy" \
+		2>/dev/null
+then
+	cmn::task::fail "Unable to copy postdeploy script."
+	cmn::step::fail
+	exit 16
+fi
+
+source "${buildpack_dir}/procfile.sh"
+
 cmn::task::finish
 
 cmn::step::finish
@@ -188,26 +210,6 @@ for f in "${font_files[@]}"; do
 done
 
 cmn::task::finish
-
-cmn::step::finish
-
-# -----------------------------------------------------------------------------
-
-cmn::step::start "Copying Files"
-
-if [ -f "${build_dir}/license.lic" ]; then
-	cmn::task::start "Copying License File"
-
-	if ! mv "${build_dir}/license.lic" "${build_dir}/data/license.lic" \
-		2>/dev/null
-	then
-		cmn::task::fail
-		cmn::step::fail
-		exit 31
-	fi
-
-	cmn::task::finish
-fi
 
 cmn::step::finish
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+ONLYOFFICE_MODE=$1
+
 start_service() {
     local name=$1
     local cmd=$2

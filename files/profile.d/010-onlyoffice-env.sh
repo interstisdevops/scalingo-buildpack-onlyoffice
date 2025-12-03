@@ -100,5 +100,5 @@ export OO_S3_ACCESS_KEY_ID
 export OO_S3_SECRET_ACCESS_KEY
 
 if [ -n "${OO_DS_LICENCE:-}" ]; then
-	echo "${OO_DS_LICENCE}" | base64 --decode > /app/license.lic
+	echo "${OO_DS_LICENCE}" | base64 --decode > /app/data/license.lic
 fi

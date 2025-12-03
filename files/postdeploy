@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+psql "${SCALINGO_POSTGRESQL_URL}" < /app/server/schema/postgresql/createdb.sql
