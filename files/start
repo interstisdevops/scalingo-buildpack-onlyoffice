@@ -39,13 +39,9 @@ if [ "${_OO_START}" -eq 0 ]; then
             echo "Starting ONLYOFFICE File Converter..."
             ensure_service "OnlyOffice FileConverter" "/app/server/FileConverter/converter"
             ;;
-        proxy)
-            echo "Starting ONLYOFFICE Proxy..."
-            ensure_service "OnlyOffice Proxy" "/app/server/Proxy/proxy"
-            ;;
         *)
             echo "[WARNING] Unknown or undefined ONLYOFFICE_MODE: '${ONLYOFFICE_MODE}'"
-            echo "Valid values: docservice | fileconverter | proxy"
+            echo "Valid values: docservice | fileconverter"
             ;;
     esac
 fi

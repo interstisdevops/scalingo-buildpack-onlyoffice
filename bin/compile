@@ -147,8 +147,6 @@ then
 	exit 16
 fi
 
-source "${buildpack_dir}/procfile.sh"
-
 cmn::task::finish
 
 cmn::step::finish

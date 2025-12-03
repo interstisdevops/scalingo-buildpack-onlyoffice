@@ -1,46 +1,13 @@
 #!/usr/bin/env bash
 
-# Check if ONLYOFFICE_MODE is set
-if [ -z "$ONLYOFFICE_MODE" ]; then
-  echo "[ERROR] The ONLYOFFICE_MODE environment variable is not set."
-  echo "Possible values: docservice, fileconverter, proxy"
-  exit 1
-fi
-
-echo "Current mode: $ONLYOFFICE_MODE"
-
-# ===============================
-# Actions based on ONLYOFFICE_MODE
-# ===============================
-
-case "$ONLYOFFICE_MODE" in
-  docservice)
-    cat << EOF
+cat << EOF
 ---
 addons:
   - scalingo-postgresql
 config_vars:
   PATH: /app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 default_process_types:
-  docservice: start $ONLYOFFICE_MODE
-  postdeploy: psql "${SCALINGO_POSTGRESQL_URL}" < /app/server/schema/postgresql/createdb.sql
+  web: bin/run
+  docservice: bin/start $ONLYOFFICE_MODE
+  postdeploy: bin/postdeploy
 EOF
-    ;;
-  
-  fileconverter)
-    cat << EOF
----
-addons:
-config_vars:
-  PATH: /app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-default_process_types:
-  fileconverter: start $ONLYOFFICE_MODE
-EOF
-    ;;
-  
-  *)
-    echo "[ERROR] Unknown value for ONLYOFFICE_MODE: '$ONLYOFFICE_MODE'"
-    echo "Valid values: docservice | fileconverter"
-    exit 1
-    ;;
-esac
