@@ -17,8 +17,12 @@ case "$ONLYOFFICE_MODE" in
   docservice)
     cat << EOF
 ---
+addons:
+  - scalingo-postgresql
+config_vars:
+  PATH: /app/server/DocService:/app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 default_process_types:
-  docservice: /app/server/DocService/docservice & bin/run
+  docservice: docservice
   postdeploy: psql "${SCALINGO_POSTGRESQL_URL}" < /app/server/schema/postgresql/createdb.sql
 EOF
     ;;
@@ -26,9 +30,11 @@ EOF
   fileconverter)
     cat << EOF
 ---
+addons:
+config_vars:
+  PATH: /app/server/FileConverter:/app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 default_process_types:
-  fileconverter: /app/server/FileConverter/converter & bin/run
-  postdeploy: psql "${SCALINGO_POSTGRESQL_URL}" < /app/server/schema/postgresql/createdb.sql
+  fileconverter: converter & bin/run
 EOF
     ;;
   
