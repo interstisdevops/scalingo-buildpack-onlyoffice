@@ -7,7 +7,7 @@ start_service() {
     local cmd=$2
 
     echo "Starting $name"
-    $cmd &
+    $cmd
 }
 
 ensure_service() {
