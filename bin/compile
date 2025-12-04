@@ -147,6 +147,8 @@ then
 	exit 16
 fi
 
+chmod +x "${build_dir}/bin"/*
+
 cmn::task::finish
 
 cmn::step::finish
