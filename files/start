@@ -23,7 +23,7 @@ ensure_service() {
             echo "$name does not seem to be running. Respawning."
             start_service "$name" "$cmd"
         fi
-    done &
+    done
 }
 
 # Only start OnlyOffice services if conditions are OK
@@ -45,3 +45,6 @@ if [ "${_OO_START}" -eq 0 ]; then
             ;;
     esac
 fi
+
+echo "Ending ONLYOFFICE ${ONLYOFFICE_MODE} - Crash container"
+exit 1;
