@@ -119,7 +119,7 @@
         "options": {
           "username": "<%= ENV['OO_DS_SERVICES_COAUTHORING_REDIS_USERNAME'] %>",
           "password": "<%= ENV['OO_DS_SERVICES_COAUTHORING_REDIS_PASSWORD'] %>",
-          "tls": <%= ENV['OO_DS_SERVICES_COAUTHORING_REDIS_TLS'] || "null" %>,
+          "tls": <%= ENV['OO_DS_SERVICES_COAUTHORING_REDIS_TLS'] || false  %>,
           "database": 0,
           "connectTimeout": 10000
         }
