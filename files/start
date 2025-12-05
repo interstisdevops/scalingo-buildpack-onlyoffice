@@ -39,6 +39,10 @@ if [ "${_OO_START}" -eq 0 ]; then
             echo "Starting ONLYOFFICE File Converter..."
             ensure_service "OnlyOffice FileConverter" "/app/server/FileConverter/converter"
             ;;
+        adminpanel)
+            echo "Starting ONLYOFFICE Admin Panel..."
+            ensure_service "OnlyOffice AdminPanel" "/app/server/AdminPanel/server/adminpanel"
+            ;;
         *)
             echo "[WARNING] Unknown or undefined ONLYOFFICE_MODE: '${ONLYOFFICE_MODE}'"
             echo "Valid values: docservice | fileconverter"
