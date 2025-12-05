@@ -6,7 +6,7 @@ export OO_DS_RABBITMQ_URL="${OO_DS_RABBITMQ_URL:-""}"
 if [[ "$REDIS_URL" == rediss://* ]]; then
   REDIS_TLS="{"rejectUnauthorized": false}"
 else
-  REDIS_TLS=""
+  REDIS_TLS="\"\""
 fi
 
 # Remove the protocol prefix (redis:// or rediss://)
