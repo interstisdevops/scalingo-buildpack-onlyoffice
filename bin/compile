@@ -32,7 +32,6 @@ onlyoffice_dir="${tmp_dir}/onlyoffice-${version}"
 src="${onlyoffice_dir}/var/www/onlyoffice/documentserver"
 
 #TODO: provide our own default file in files?
-default_config_file="${onlyoffice_dir}/etc/onlyoffice/documentserver/default.json"
 custom_config_file="${build_dir}/production.json"
 
 # Path to the configuration directory:
@@ -119,6 +118,14 @@ then
 	cmn::task::fail "Unable to copy log4js configuration file, aborting."
 	cmn::step::fail
 	exit 15
+fi
+
+if ! cp "${buildpack_dir}/files/default.json" "${config_dir}/" \
+		2>/dev/null
+then
+	cmn::task::fail "Unable to copy default configuration template, aborting."
+	cmn::step::fail
+	exit 16
 fi
 
 if ! cp "${buildpack_dir}/files/production.json.erb" "${config_dir}/" \
