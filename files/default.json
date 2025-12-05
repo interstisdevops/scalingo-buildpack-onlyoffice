@@ -449,7 +449,7 @@
 				"errorcode": 403
 			},
 			"request-filtering-agent" : {
-				"allowPrivateIPAddress": false,
+				"allowPrivateIPAddress": true,
 				"allowMetaIPAddress": false
 			},
 			"secret": {
