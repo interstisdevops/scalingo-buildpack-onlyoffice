@@ -100,12 +100,6 @@ if ! cp --archive "${src}"/* "${build_dir}" 2>/dev/null; then
 	exit 13
 fi
 
-if ! cp "${default_config_file}" "${build_dir}/config/" 2>/dev/null; then
-	cmn::task::fail "Unable to copy default configuration file, aborting."
-	cmn::step::fail
-	exit 14
-fi
-
 
 cmn::task::finish
 
@@ -120,18 +114,18 @@ then
 	exit 15
 fi
 
-if ! cp "${buildpack_dir}/files/default.json" "${config_dir}/" \
-		2>/dev/null
-then
-	cmn::task::fail "Unable to copy default configuration template, aborting."
-	cmn::step::fail
-	exit 16
-fi
-
 if ! cp "${buildpack_dir}/files/production.json.erb" "${config_dir}/" \
 		2>/dev/null
 then
 	cmn::task::fail "Unable to copy custom configuration template, aborting."
+	cmn::step::fail
+	exit 16
+fi
+
+if ! cp "${buildpack_dir}/files/default.json" "${config_dir}/" \
+		2>/dev/null
+then
+	cmn::task::fail "Unable to copy default configuration template, aborting."
 	cmn::step::fail
 	exit 16
 fi
