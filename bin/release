@@ -4,6 +4,7 @@ cat << EOF
 ---
 addons:
   - scalingo-postgresql
+  - scalingo-redis
 config_vars:
   PATH: /app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 default_process_types:
