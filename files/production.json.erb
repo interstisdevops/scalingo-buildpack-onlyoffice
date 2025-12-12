@@ -17,7 +17,7 @@
   	"statsd": {
 		"useMetrics": true,
 		"host": "<%= ENV['ADMINPANEL_WORKERNAME'] %>.<%= ENV['SCALINGO_APPLICATION_ID'] %>.<%= ENV['SCALINGO_PRIVATE_NETWORK_ID'] %>.private-network.internal",
-		"port": "8125",
+		"port": "<%= ENV['METRICS_PORT'] %>",
 		"prefix": "ds."
 	},
   "storage": {
