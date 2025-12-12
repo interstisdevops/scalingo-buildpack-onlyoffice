@@ -18,15 +18,19 @@ ensure_service() {
     pattern=${pattern:-$cmd}
 
     while true; do
-        sleep 30
         if ! pgrep -f "$pattern" >/dev/null; then
             echo "$name does not seem to be running. Respawning."
             start_service "$name" "$cmd"
         fi
+        sleep 30
     done
 }
 
 # Only start OnlyOffice services if conditions are OK
+            start_service "$name" "$cmd"
+        fi
+    done
+}
 # `_OO_START` is computed in 020-onlyoffice.sh
 
 if [ "${_OO_START}" -eq 0 ]; then
