@@ -1,4 +1,8 @@
 {
+  "adminPanel": {
+		"port": <%= ENV['ADMINPANEL_PORT'] %>,
+    "passwordHash": "<%= ENV['ADMINPANEL_PASSWORDHASH'] %>"
+	},
   "log": {
     "filePath": "/app/config/log4js/production.json"
   },
