@@ -44,6 +44,11 @@ if [ "${_OO_START}" -eq 0 ]; then
             cd /app/server/AdminPanel/
             ensure_service "OnlyOffice AdminPanel" "/app/server/AdminPanel/server/adminpanel"
             ;;
+        metrics)
+            echo "Starting ONLYOFFICE Admin Panel..."
+            cd /app/server/Metrics/
+            ensure_service "OnlyOffice AdminPanel" "/app/server/server/Metrics/metrics /app/config/metrics/config.js"
+            ;;
         *)
             echo "[WARNING] Unknown or undefined ONLYOFFICE_MODE: '${ONLYOFFICE_MODE}'"
             echo "Valid values: docservice | fileconverter"
