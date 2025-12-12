@@ -2,6 +2,14 @@
   "log": {
     "filePath": "/app/config/log4js/production.json"
   },
+  "runtimeConfig": {
+		"filePath": "/app/config/runtime/production.json",
+		"cache": {
+			"stdTTL": 300,
+			"checkperiod": 60,
+			"useClones": false
+		}
+	},
   "storage": {
     "name": "storage-s3",
     "endpoint": "<%= ENV['OO_S3_ENDPOINT'] %>",
