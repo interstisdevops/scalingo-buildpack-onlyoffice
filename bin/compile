@@ -114,30 +114,42 @@ then
 	exit 15
 fi
 
-if ! cp "${buildpack_dir}/files/production.json.erb" "${config_dir}/" \
-		2>/dev/null
-then
-	cmn::task::fail "Unable to copy custom configuration template, aborting."
-	cmn::step::fail
-	exit 16
+if [ ! -f "${config_dir}/production.json.erb" ]; then
+	if ! cp "${buildpack_dir}/files/production.json.erb" "${config_dir}/" \
+			2>/dev/null
+	then
+		cmn::task::fail "Unable to copy custom configuration template, aborting."
+		cmn::step::fail
+		exit 16
+	fi
+else
+	cmn::output::info "Custom configuration template already exists, skipping."
 fi
 
-if ! cp "${buildpack_dir}/files/default.json" "${config_dir}/" \
-		2>/dev/null
-then
-	cmn::task::fail "Unable to copy default configuration template, aborting."
-	cmn::step::fail
-	exit 16
+if [ ! -f "${config_dir}/default.json" ]; then
+	if ! cp "${buildpack_dir}/files/default.json" "${config_dir}/" \
+			2>/dev/null
+	then
+		cmn::task::fail "Unable to copy default configuration template, aborting."
+		cmn::step::fail
+		exit 16
+	fi
+else
+	cmn::output::info "Default configuration already exists, skipping."
 fi
 
-mkdir --parents "${config_dir}/metrics"
+if [ ! -f "${config_dir}/metrics/config.js" ]; then
+	mkdir --parents "${config_dir}/metrics"
 
-if ! cp "${buildpack_dir}/files/metrics/config.js" "${config_dir}/metrics/" \
-		2>/dev/null
-then
-	cmn::task::fail "Unable to copy configuration metrics"
-	cmn::step::fail
-	exit 16
+	if ! cp "${buildpack_dir}/files/metrics/config.js" "${config_dir}/metrics/" \
+			2>/dev/null
+	then
+		cmn::task::fail "Unable to copy configuration metrics"
+		cmn::step::fail
+		exit 16
+	fi
+else
+	cmn::output::info "Metrics configuration already exists, skipping."
 fi
 
 mkdir --parents "${build_dir}/bin"
